@@ -2,7 +2,7 @@ version: "3"
 services:
   postgres:
     image: library/postgres:13
-    container_name: postgres_lab2
+    container_name: postgres_lab3
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -14,7 +14,7 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - db-local
+      - net-local
       
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -q -d postgres -U postgres"]
@@ -39,8 +39,7 @@ services:
     environment:
       DATABASE_HOST: postgres
     networks:
-      - db-local
-      - loyalty-local
+      - net-local
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8050/manage/health"]
       interval: 5s
@@ -62,8 +61,7 @@ services:
     environment:
       DATABASE_HOST: postgres
     networks:
-      - db-local
-      - payment-local
+      - net-local
     
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8060/manage/health"]
@@ -85,8 +83,7 @@ services:
     environment:
       DATABASE_HOST: postgres
     networks:
-      - db-local
-      - reservation-local
+      - net-local
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8070/manage/health"]
       interval: 5s
@@ -105,9 +102,8 @@ services:
       - payment
       - loyalty
     networks:
-      - loyalty-local
-      - payment-local
-      - reservation-local
+      - net-local
+
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/manage/health"]
       interval: 5s
@@ -115,10 +111,7 @@ services:
     
   
 networks:
-  loyalty-local:
-  payment-local:
-  reservation-local:
-  db-local:
+  net-local:
     driver: bridge
 
 volumes:
