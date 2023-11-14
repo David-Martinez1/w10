@@ -1,68 +1,77 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Gateway.Services;
+using Gateway.ServiceInterfaces;
 using Gateway.DTO;
 using Gateway.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
 using System;
+using Microsoft.AspNetCore.Http;
 
 namespace Gateway.Controllers
 {
     [ApiController]
-    [Route("/api/v1/")]
+    [Route("/")]
     public class GatewayController : ControllerBase
     {
-        private readonly ReservationConnect _reservationsConnect;
-        private readonly PaymentConnect _paymentsConnect;
-        private readonly LoyaltyConnect _loyaltyConnect;
+        private readonly IReservationService _reservationsService;
+        private readonly IPaymentService _paymentsService;
+        private readonly ILoyaltyService _loyaltyService;
 
-        public GatewayController( ReservationConnect reservationsConnect,
-            PaymentConnect paymentsConnect, LoyaltyConnect loyaltyConnect)
+        public GatewayController( IReservationService reservationsService,
+            IPaymentService paymentsService, ILoyaltyService loyaltyService)
         {
-            
-            _reservationsConnect = reservationsConnect;
-            _paymentsConnect = paymentsConnect;
-            _loyaltyConnect = loyaltyConnect;
+            _reservationsService = reservationsService;
+            _paymentsService = paymentsService;
+            _loyaltyService = loyaltyService;
         }
 
-        /// <summary>
-        /// Проверяет жив ли ещё сервис
-        /// </summary>
-        /// <returns>Если сервис жив возвращает 200 </returns>
-        /// <response code="200" cref="Person">Работает</response>
         [IgnoreAntiforgeryToken]
-        [HttpGet("/manage/health")]
+        [HttpGet("manage/health")]
         public async Task<ActionResult> HealthCheck()
         {
             return Ok();
         }
 
-        /// <summary>
-        /// Получить информацию 
-        /// </summary>
-        /// <returns>Если сервис жив возвращает 200 </returns>
-        /// <response code="200" cref="Person">Работает</response>
-        [HttpGet("hotels")]
-        public async Task<PaginationResponse<IEnumerable<Hotels>>?> GetAllHotels(
+        [HttpGet("api/v1/hotels")]
+        public async Task<ActionResult<PaginationResponse<IEnumerable<Hotels>>?>> GetAllHotels(
         [FromQuery] int? page,
         [FromQuery] int? size)
         {
-            var response = await _reservationsConnect.GetHotelsAsync(page, size);
+            var checkReservationService = _reservationsService.HealthCheckAsync();
+
+            if (!(await checkReservationService))
+            {
+                var resp = new ErrorResponse()
+                {
+                    Message = "Reservation Service unavailable",
+                };
+                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                return new ObjectResult(resp);
+            }
+            var response = await _reservationsService.GetHotelsAsync(page, size);
             return response;
         }
 
-        /// <summary>
-        /// Возвращает информацию о пользователе
-        /// </summary>
-        /// <returns>Запись о пользователе и его статус лояльности  </returns>
-        /// <response code="200" cref="Person">Работает</response>
-        [HttpGet("me")]
-        public async Task<UserInfoResponse?> GetUserInfoByUsername(
+        [HttpGet("api/v1/me")]
+        public async Task<ActionResult<UserInfoResponse?>> GetUserInfoByUsername(
         [FromHeader(Name = "X-User-Name")] string xUserName)
         {
-            var reservations = await _reservationsConnect.GetReservationsByUsernameAsync(xUserName);
+            var checkReservationService = _reservationsService.HealthCheckAsync();
+
+            if (!(await checkReservationService))
+            {
+                var resp = new ErrorResponse()
+                {
+                    Message = "Reservation Service unavailable",
+                };
+                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                return new ObjectResult(resp);
+            }
+
+            var reservations = await _reservationsService.GetReservationsByUsernameAsync(xUserName);
             if (reservations == null || !reservations.Any())
             {
                 return null;
@@ -72,9 +81,14 @@ namespace Gateway.Controllers
             response.Reservations = new List<UserReservationInfo>();
             var tasks = reservations.Select(reservation => Task.Run(async () =>
             {
-                var hotel = await _reservationsConnect.GetHotelsByIdAsync(reservation.HotelId);
-                var payment = await _paymentsConnect.GetPaymentByUidAsync(reservation.PaymentUid);
-
+                var hotel = await _reservationsService.GetHotelsByIdAsync(reservation.HotelId);
+                Payment payment = null;
+                var checkPaymentService = _paymentsService.HealthCheckAsync();
+                if (await checkPaymentService)
+                {
+                    payment = await _paymentsService.GetPaymentByUidAsync(reservation.PaymentUid);
+                }
+                
                 response.Reservations.Add(new UserReservationInfo()
                 {
                     ReservationUid = reservation.ReservationUid,
@@ -88,37 +102,51 @@ namespace Gateway.Controllers
                         FullAddress = hotel.Country + ", " + hotel.City + ", " + hotel.Address,
                         Stars = hotel.Stars,
                     },
-                    Payment = new PaymentInfo()
+                    Payment = payment == null ? new object[] { } : new PaymentInfo()
                     {
-                        Status = payment.Status,
-                        Price = payment.Price,
+                        Status = payment?.Status,
+                        Price = payment?.Price,
                     },
                 });
             }));
 
             await Task.WhenAll(tasks);
 
-            var loyalty = await _loyaltyConnect.GetLoyaltyByUsernameAsync(xUserName);
 
-            response.Loyalty = new LoyaltyInfo()
+            Loyalty loyalty = null;
+            var checkLoyaltyService = _loyaltyService.HealthCheckAsync();
+            if (await checkLoyaltyService)
             {
-                Status = loyalty.Status,
-                Discount = loyalty.Discount,
+                loyalty = await _loyaltyService.GetLoyaltyByUsernameAsync(xUserName);
+
+            }
+
+            response.Loyalty = loyalty == null ? new object[]{} : new LoyaltyInfo()
+            {
+                Status = loyalty?.Status,
+                Discount = loyalty?.Discount,
             };
 
             return response;
         }
 
-        /// <summary>
-        /// Получить информацию о бронировании
-        /// </summary>
-        /// <returns>Записи о всех бронях с отелями и оплатами </returns>
-        /// <response code="200" cref="Person">Работает</response>
-        [HttpGet("reservations")]
-        public async Task<List<UserReservationInfo>?> GetReservationsInfoByUsername(
+        [HttpGet("api/v1/reservations")]
+        public async Task<ActionResult<List<UserReservationInfo>?>> GetReservationsInfoByUsername(
         [FromHeader(Name = "X-User-Name")] string xUserName)
         {
-            var reservations = await _reservationsConnect.GetReservationsByUsernameAsync(xUserName);
+            var checkReservationService = _reservationsService.HealthCheckAsync();
+
+            if (!(await checkReservationService))
+            {
+                var resp = new ErrorResponse()
+                {
+                    Message = "Reservation Service unavailable",
+                };
+                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                return new ObjectResult(resp);
+            }
+
+            var reservations = await _reservationsService.GetReservationsByUsernameAsync(xUserName);
             if (reservations == null || !reservations.Any())
             {
                 return null;
@@ -127,8 +155,13 @@ namespace Gateway.Controllers
             var response = new List<UserReservationInfo>();
             var tasks = reservations.Select(reservation => Task.Run(async () =>
             {
-                var hotel = await _reservationsConnect.GetHotelsByIdAsync(reservation.HotelId);
-                var payment = await _paymentsConnect.GetPaymentByUidAsync(reservation.PaymentUid);
+                var hotel = await _reservationsService.GetHotelsByIdAsync(reservation.HotelId);
+                Payment payment = null;
+                var checkPaymentService = _paymentsService.HealthCheckAsync();
+                if (await checkPaymentService)
+                {
+                    payment = await _paymentsService.GetPaymentByUidAsync(reservation.PaymentUid);
+                }
                 
                 response.Add(new UserReservationInfo()
                 {
@@ -145,8 +178,8 @@ namespace Gateway.Controllers
                     },
                     Payment = new PaymentInfo()
                     {
-                        Status = payment.Status,
-                        Price = payment.Price,
+                        Status = payment?.Status,
+                        Price = payment?.Price,
                     },
                 });
             }));
@@ -157,12 +190,24 @@ namespace Gateway.Controllers
             return response;
         }
 
-        [HttpGet("reservations/{reservationsUid}")]
+        [HttpGet("api/v1/reservations/{reservationsUid}")]
         public async Task<ActionResult<UserReservationInfo>?> GetReservationsInfoByUsername(
         [FromRoute] Guid reservationsUid,
         [FromHeader(Name = "X-User-Name")] string xUserName)
         {
-            var reservation = await _reservationsConnect.GetReservationsByUidAsync(reservationsUid);
+            var checkReservationService = _reservationsService.HealthCheckAsync();
+
+            if (!(await checkReservationService))
+            {
+                var resp = new ErrorResponse()
+                {
+                    Message = "Reservation Service unavailable",
+                };
+                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                return new ObjectResult(resp);
+            }
+
+            var reservation = await _reservationsService.GetReservationsByUidAsync(reservationsUid);
             if (reservation == null)
             {
                 return BadRequest();
@@ -173,8 +218,16 @@ namespace Gateway.Controllers
                 return BadRequest();
             }
 
-            var hotel = await _reservationsConnect.GetHotelsByIdAsync(reservation.HotelId);
-            var payment = await _paymentsConnect.GetPaymentByUidAsync(reservation.PaymentUid);
+            var hotel = await _reservationsService.GetHotelsByIdAsync(reservation.HotelId);
+
+            var checkPaymentService = _paymentsService.HealthCheckAsync();
+
+            Payment payment = null;
+
+            if (await checkPaymentService)
+            {
+                payment = await _paymentsService.GetPaymentByUidAsync(reservation.PaymentUid);
+            }
 
             var response = new UserReservationInfo()
             {
@@ -191,22 +244,32 @@ namespace Gateway.Controllers
                 },
                 Payment = new PaymentInfo()
                 {
-                    Status = payment.Status,
-                    Price = payment.Price,
+                    Status = payment?.Status,
+                    Price = payment?.Price,
                 },
             };
 
-            
             return response;
         }
 
-        [HttpPost("reservations")]
+        [HttpPost("api/v1/reservations")]
         public async Task<ActionResult<CreateReservationResponse?>> CreateReservation(
-        [FromHeader(Name = "Name")] string Name,
+        [FromHeader(Name = "X-User-Name")] string xUserName,
         [FromBody] CreateReservationRequest request)
         {
+            var checkReservationService = _reservationsService.HealthCheckAsync();
 
-            var hotel = await _reservationsConnect.GetHotelsByUidAsync(request.HotelUid);
+            if (!(await checkReservationService))
+            {
+                var resp = new ErrorResponse()
+                {
+                    Message = "Reservation Service unavailable",
+                };
+                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                return new ObjectResult(resp);
+            }
+
+            var hotel = await _reservationsService.GetHotelsByUidAsync(request.HotelUid);
 
             if (hotel == null)
             {
@@ -215,9 +278,20 @@ namespace Gateway.Controllers
 
             int sum = ((request.EndDate - request.StartDate).Days) * hotel.Price;
 
-            var loyalty = await _loyaltyConnect.GetLoyaltyByUsernameAsync(Name);
+            var checkLoyaltyService = _loyaltyService.HealthCheckAsync();
 
-            
+            if (!(await checkLoyaltyService))
+            {
+                var resp = new ErrorResponse()
+                {
+                    Message = "Loyalty Service unavailable",
+                };
+                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                return new ObjectResult(resp);
+            }
+
+            var loyalty = await _loyaltyService.GetLoyaltyByUsernameAsync(xUserName);
+
             if (loyalty == null)
             {
                 sum -= sum * 5 / 100;
@@ -232,14 +306,39 @@ namespace Gateway.Controllers
                 Price = sum,
             };
 
-            var payment = await _paymentsConnect.CreatePaymentAsync(paymentRequest);
+            var checkPaymentService = _paymentsService.HealthCheckAsync();
+
+            if (!(await checkPaymentService))
+            {
+                var resp = new ErrorResponse()
+                {
+                    Message = "Payment Service unavailable",
+                };
+                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                return new ObjectResult(resp);
+            }
+
+            var payment = await _paymentsService.CreatePaymentAsync(paymentRequest);
 
             if (payment == null)
             {
                 return BadRequest(null);
             }
 
-            loyalty = await _loyaltyConnect.PutLoyaltyByUsernameAsync(Name);
+            checkLoyaltyService = _loyaltyService.HealthCheckAsync();
+
+            if (!(await checkLoyaltyService))
+            {
+                await _paymentsService.RollBackPayment(payment.PaymentUid);
+                var resp = new ErrorResponse()
+                {
+                    Message = "Loyalty Service unavailable",
+                };
+                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                return new ObjectResult(resp);
+            }
+
+            loyalty = await _loyaltyService.PutLoyaltyByUsernameAsync(xUserName);
 
             Reservation reservationRequest = new Reservation()
             {
@@ -249,14 +348,13 @@ namespace Gateway.Controllers
                 StartDate = request.StartDate,
             };
 
-            var reservation = await _reservationsConnect.CreateReservationAsync(Name, reservationRequest);
+            var reservation = await _reservationsService.CreateReservationAsync(xUserName, reservationRequest);
 
             var reservationResponse = new CreateReservationResponse()
             {
                 ReservationUid = reservation.ReservationUid,
                 HotelUid = hotel.HotelUid,
-                //StartDate = DateOnly.FromDateTime(reservation.StartDate),
-                //EndDate = DateOnly.FromDateTime(reservation.EndDate),
+             
                 StartDate = DateOnly.FromDateTime(reservation.StartDate),
                 EndDate = DateOnly.FromDateTime(reservation.EndDate),
                 Status = reservation.Status,
@@ -271,28 +369,46 @@ namespace Gateway.Controllers
             return Ok(reservationResponse);
         }
 
-
-        /// <summary>
-        /// Получить данные по бронированию
-        /// </summary>
-        /// <returns> Запись о бронировании reservationsUid</returns>
-
-        [HttpDelete("reservations/{reservationsUid}")]
+        [HttpDelete("api/v1/reservations/{reservationsUid}")]
         public async Task<ActionResult> DeleteReservationsByUid(
         [FromRoute] Guid reservationsUid,
-        [FromHeader(Name = "Name")] string Name)
+        [FromHeader(Name = "X-User-Name")] string xUserName)
         {
-            var reservation = await _reservationsConnect.GetReservationsByUidAsync(reservationsUid);
+            var checkReservationService = _reservationsService.HealthCheckAsync();
+
+            if (!(await checkReservationService))
+            {
+                var resp = new ErrorResponse()
+                {
+                    Message = "Reservation Service unavailable",
+                };
+                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                return new ObjectResult(resp);
+            }
+
+            var reservation = await _reservationsService.GetReservationsByUidAsync(reservationsUid);
             if (reservation == null)
             {
                 return BadRequest();
             }
 
-            var updateReservationTask = _reservationsConnect.DeleteReservationAsync(reservation.ReservationUid);
+            var updateReservationTask = _reservationsService.DeleteReservationAsync(reservation.ReservationUid);
 
-            var updatePaymentTask = _paymentsConnect.DeletePaymentByUidAsync(reservation.PaymentUid);
+            var checkPaymentService = _paymentsService.HealthCheckAsync();
 
-            var updateLoyaltyTask = _loyaltyConnect.DeleteLoyaltyByUsernameAsync(Name);
+            if (!(await checkPaymentService))
+            {
+                var resp = new ErrorResponse()
+                {
+                    Message = "Payment Service unavailable",
+                };
+                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                return new ObjectResult(resp);
+            }
+
+            var updatePaymentTask = _paymentsService.CancelPaymentByUidAsync(reservation.PaymentUid);
+
+            var updateLoyaltyTask = _loyaltyService.DeleteLoyaltyByUsernameAsync(xUserName);
 
             await updateReservationTask;
             await updatePaymentTask;
@@ -301,17 +417,22 @@ namespace Gateway.Controllers
             return Ok(null);
         }
 
-
-        /// <summary>
-        /// Возвращает информацию о лояльности пользователя
-        /// </summary>
-        /// <returns> статус лояльности  </returns>
-        
-        [HttpGet("loyalty")]
-        public async Task<LoyaltyInfoResponse?> GetLoyaltyInfoByUsername(
-        [FromHeader(Name = "Name")] string Name)
+        [HttpGet("api/v1/loyalty")]
+        public async Task<ActionResult<LoyaltyInfoResponse?>> GetLoyaltyInfoByUsername(
+        [FromHeader(Name = "X-User-Name")] string xUserName)
         {
-            var loyalty = await _loyaltyConnect.GetLoyaltyByUsernameAsync(Name);
+            var checkLoyaltyService = _loyaltyService.HealthCheckAsync();
+
+            if (!(await checkLoyaltyService))
+            {
+                var resp = new ErrorResponse()
+                {
+                    Message = "Loyalty Service unavailable",
+                };
+                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                return new ObjectResult(resp);
+            }
+            var loyalty = await _loyaltyService.GetLoyaltyByUsernameAsync(xUserName);
 
             var response = new LoyaltyInfoResponse()
             {

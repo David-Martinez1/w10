@@ -36,13 +36,26 @@ namespace Payment_Service
             return reservation;
         }
 
-        [HttpDelete("api/v1/payments/{paymentUid}")]
+        [HttpPut("api/v1/payments/{paymentUid}")]
         public async Task<ActionResult<Payment?>> UpdateByUid([FromRoute] Guid paymentUid)
         {
             var res = await _paymentContext.Payments
                 .FirstOrDefaultAsync(r => r.PaymentUid.Equals(paymentUid));
             res.Status = PaymentStatuses.CANCELED;
             await _paymentContext.SaveChangesAsync();
+            return res;
+        }
+
+        [HttpDelete("api/v1/payments/{paymentUid}")]
+        public async Task<ActionResult<Payment?>> DeleteByUid([FromRoute] Guid paymentUid)
+        {
+            var res = await _paymentContext.Payments
+                .FirstOrDefaultAsync(r => r.PaymentUid.Equals(paymentUid));
+            if (res != null)
+            {
+                _paymentContext.Remove(res);
+                await _paymentContext.SaveChangesAsync();
+            }
             return res;
         }
 
