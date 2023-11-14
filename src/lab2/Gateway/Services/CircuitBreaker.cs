@@ -3,8 +3,10 @@ using System.Runtime.CompilerServices;
 
 namespace Gateway.Services
 {
+
     public class CircuitBreaker
     {
+
         private static volatile CircuitBreaker instance = null;
         private static object syncRoot = new object();
         private static int failureCount = 0;
@@ -13,6 +15,7 @@ namespace Gateway.Services
 
         public static CircuitBreaker Instance
         {
+
             get
             {
                 if (instance == null)

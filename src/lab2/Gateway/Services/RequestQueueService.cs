@@ -22,12 +22,14 @@ namespace Gateway.Services
         public void StartWorker()
         {
             new Thread(Start).Start();
-            Console.WriteLine("Thread started");
         }
 
         public void AddRequestToQueue(HttpRequestMessage httpRequestMessage)
         {
-            _requestMessagesQueue.Enqueue(httpRequestMessage);
+            lock (locker)
+            {
+                _requestMessagesQueue.Enqueue(httpRequestMessage);
+            }
         }
 
         private async void Start(object? state)
