@@ -2,7 +2,7 @@ version: "3"
 services:
   postgres:
     image: library/postgres:13
-    container_name: postgres_lab3
+    container_name: postgres
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -29,14 +29,14 @@ services:
     restart: always
     container_name: loyalty_lab3
     depends_on:
-      postgres_lab3:
+      postgres:
         condition: service_healthy
     ports:
       - "8050:8050"
     links:
-      - postgres_lab3
+      - postgres
     environment:
-      DATABASE_HOST: postgres_lab3
+      DATABASE_HOST: postgres
     networks:
       - net-local
     healthcheck:
@@ -51,14 +51,14 @@ services:
     restart: always
     container_name: payment_lab3
     depends_on:
-      postgres_lab3:
+      postgres:
         condition: service_healthy
     ports:
       - "8060:8060"
     links:
-      - postgres_lab3
+      - postgres
     environment:
-      DATABASE_HOST: postgres_lab3
+      DATABASE_HOST: postgres
     networks:
       - net-local
     
@@ -73,14 +73,14 @@ services:
     restart: always
     container_name: reservation_lab3
     depends_on:
-      postgres_lab3:
+      postgres:
         condition: service_healthy
     ports:
       - "8070:8070"
     links:
-      - postgres_lab3
+      - postgres
     environment:
-      DATABASE_HOST: postgres_lab3
+      DATABASE_HOST: postgres
     networks:
       - net-local
     healthcheck:
