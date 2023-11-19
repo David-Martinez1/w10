@@ -9,7 +9,6 @@ services:
       POSTGRES_PASSWORD: "postgres"
       POSTGRES_DB: postgres
     volumes:
-      - db-data:/var/lib/postgresql/data
       - ./postgres/:/docker-entrypoint-initdb.d/
     ports:
       - "5432:5432"
@@ -28,16 +27,16 @@ services:
       context: ./src/lab2/Loyalty Service/
       dockerfile: Dockerfile
     restart: always
-    container_name: loyalty
+    container_name: loyalty_lab3
     depends_on:
-      postgres:
+      postgres_lab3:
         condition: service_healthy
     ports:
       - "8050:8050"
     links:
-      - postgres
+      - postgres_lab3
     environment:
-      DATABASE_HOST: postgres
+      DATABASE_HOST: postgres_lab3
     networks:
       - net-local
     healthcheck:
@@ -50,16 +49,16 @@ services:
       context: ./src/lab2/Payment Service/
       dockerfile: Dockerfile
     restart: always
-    container_name: payment
+    container_name: payment_lab3
     depends_on:
-      postgres:
+      postgres_lab3:
         condition: service_healthy
     ports:
       - "8060:8060"
     links:
-      - postgres
+      - postgres_lab3
     environment:
-      DATABASE_HOST: postgres
+      DATABASE_HOST: postgres_lab3
     networks:
       - net-local
     
@@ -72,16 +71,16 @@ services:
       context: ./src/lab2/Reservation Service/
       dockerfile: Dockerfile
     restart: always
-    container_name: reservation
+    container_name: reservation_lab3
     depends_on:
-      postgres:
+      postgres_lab3:
         condition: service_healthy
     ports:
       - "8070:8070"
     links:
-      - postgres
+      - postgres_lab3
     environment:
-      DATABASE_HOST: postgres
+      DATABASE_HOST: postgres_lab3
     networks:
       - net-local
     healthcheck:
