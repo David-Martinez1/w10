@@ -2,24 +2,27 @@ version: "3"
 services:
   postgres:
     image: library/postgres:13
-    container_name: postgres
+    container_name: postgres_lab1
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_PASSWORD: "1234"
       POSTGRES_DB: postgres
-    healthcheck:
-      test: [ "CMD", "pg_isready" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      
     volumes:
+      - db-data:/var/lib/postgresql/data
       - ./postgres/:/docker-entrypoint-initdb.d/
     ports:
       - "5432:5432"
     networks:
       - net-local
+      
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -q -d postgres -U postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+      
      
   
   loyalty:
