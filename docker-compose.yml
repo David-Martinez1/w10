@@ -9,7 +9,6 @@ services:
       POSTGRES_PASSWORD: "postgres"
       POSTGRES_DB: postgres
     volumes:
-      - db-data:/var/lib/postgresql/data
       - ./postgres/:/docker-entrypoint-initdb.d/
     ports:
       - "5432:5432"
@@ -40,7 +39,6 @@ services:
       DATABASE_HOST: postgres
     networks:
       - db-local
-      - loyalty-local
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8050/manage/health"]
       interval: 5s
@@ -63,7 +61,6 @@ services:
       DATABASE_HOST: postgres
     networks:
       - db-local
-      - payment-local
     
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8060/manage/health"]
@@ -86,7 +83,6 @@ services:
       DATABASE_HOST: postgres
     networks:
       - db-local
-      - reservation-local
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8070/manage/health"]
       interval: 5s
@@ -99,15 +95,13 @@ services:
     restart: always
     container_name: gateway
     ports:
-      - "8080:8080"
+      - "8010:8010"
     depends_on:
       - reservation
       - payment
       - loyalty
     networks:
-      - loyalty-local
-      - payment-local
-      - reservation-local
+      - db-local
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/manage/health"]
       interval: 5s
@@ -115,11 +109,5 @@ services:
     
   
 networks:
-  loyalty-local:
-  payment-local:
-  reservation-local:
   db-local:
     driver: bridge
-
-volumes:
-  db-data:
