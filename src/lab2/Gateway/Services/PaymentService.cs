@@ -14,16 +14,8 @@ namespace Gateway.Services
 
         public PaymentService()
         {
-            _httpClient.BaseAddress = new Uri("http://payment:8060/");
             _httpClient = new HttpClient();
-        }
-        public async Task<Payment?> CreatePaymentAsync(Payment request)
-        {
-            using var req = new HttpRequestMessage(HttpMethod.Post, "api/v1/payments");
-            req.Content = JsonContent.Create(request, typeof(Payment));
-            using var res = await _httpClient.SendAsync(req);
-            var response = await res.Content.ReadFromJsonAsync<Payment>();
-            return response;
+            _httpClient.BaseAddress = new Uri("http://payment:8060/");
         }
 
         public async Task<bool> HealthCheckAsync()
@@ -32,13 +24,6 @@ namespace Gateway.Services
                 "manage/health");
             using var res = await _httpClient.SendAsync(req);
             return res.StatusCode == HttpStatusCode.OK;
-        }
-        public async Task<Payment?> RollBackPayment(Guid paymentUid)
-        {
-            using var req = new HttpRequestMessage(HttpMethod.Delete, $"api/v1/payments/{paymentUid}");
-            using var res = await _httpClient.SendAsync(req);
-            var response = await res.Content.ReadFromJsonAsync<Payment>();
-            return response;
         }
 
         public async Task<Payment?> GetPaymentByUidAsync(Guid paymentUid)
@@ -57,7 +42,21 @@ namespace Gateway.Services
             return response;
         }
 
+        public async Task<Payment?> RollBackPayment(Guid paymentUid)
+        {
+            using var req = new HttpRequestMessage(HttpMethod.Delete, $"api/v1/payments/{paymentUid}");
+            using var res = await _httpClient.SendAsync(req);
+            var response = await res.Content.ReadFromJsonAsync<Payment>();
+            return response;
+        }
 
-
+        public async Task<Payment?> CreatePaymentAsync(Payment request)
+        {
+            using var req = new HttpRequestMessage(HttpMethod.Post, "api/v1/payments");
+            req.Content = JsonContent.Create(request, typeof(Payment));
+            using var res = await _httpClient.SendAsync(req);
+            var response = await res.Content.ReadFromJsonAsync<Payment>();
+            return response;
+        }
     }
 }

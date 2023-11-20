@@ -13,14 +13,13 @@ namespace Gateway.ServiceInterfaces
 {
     public interface ILoyaltyService
     {
-        public Task<Loyalty?> PutLoyaltyByUsernameAsync(string username);
-
-        public Task<Loyalty?> DeleteLoyaltyByUsernameAsync(string username);
 
         public Task<bool> HealthCheckAsync();
 
         public Task<Loyalty?> GetLoyaltyByUsernameAsync(string username);
 
+        public Task<Loyalty?> PutLoyaltyByUsernameAsync(string username);
 
+        public Task<Loyalty?> DeleteLoyaltyByUsernameAsync(string username);
     }
 }

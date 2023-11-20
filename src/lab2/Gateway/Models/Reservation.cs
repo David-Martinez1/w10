@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Gateway.Models
 {
     /// <summary>
-    /// Запись о бронировании
+    /// Запись о человеке
     /// </summary>
     public class Reservation
     {
