@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Gateway.Models
 {
     /// <summary>
-    /// Запись о скидках
+    /// Запись о человеке
     /// </summary>
     public class Loyalty
     {

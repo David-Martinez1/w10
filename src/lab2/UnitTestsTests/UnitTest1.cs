@@ -37,7 +37,7 @@ namespace Lab2Tests
             var loyaltyMock = new Mock<ILoyaltyService>();
             loyaltyMock.Setup(a => a.HealthCheckAsync()).Returns(healthCheckTask);
 
-            GatewayController controller = new GatewayController( reservationMock.Object, paymentMock.Object, loyaltyMock.Object);
+            GatewayController controller = new GatewayController(loggerMock.Object, reservationMock.Object, paymentMock.Object, loyaltyMock.Object);
 
             var responseTask = controller.GetAllHotels(page, size);
             var response = await responseTask;
@@ -83,7 +83,7 @@ namespace Lab2Tests
             Task<Loyalty?> returnLoyaltyByUsernameTask = Task.Run(() => Builder.BuildLoyaltyByUsername(username));
             loyaltyMock.Setup(a => a.GetLoyaltyByUsernameAsync(username)).Returns(returnLoyaltyByUsernameTask);
 
-            GatewayController controller = new GatewayController( reservationMock.Object, paymentMock.Object, loyaltyMock.Object);
+            GatewayController controller = new GatewayController(loggerMock.Object, reservationMock.Object, paymentMock.Object, loyaltyMock.Object);
 
             var responseTask = controller.GetUserInfoByUsername(username);
             var response = await responseTask;
@@ -135,7 +135,7 @@ namespace Lab2Tests
             var loyaltyMock = new Mock<ILoyaltyService>();
             loyaltyMock.Setup(a => a.HealthCheckAsync()).Returns(healthCheckTask);
 
-            GatewayController controller = new GatewayController( reservationMock.Object, paymentMock.Object, loyaltyMock.Object);
+            GatewayController controller = new GatewayController(loggerMock.Object, reservationMock.Object, paymentMock.Object, loyaltyMock.Object);
 
             var responseTask = controller.GetUserInfoByUsername(username);
             var response = await responseTask;
@@ -179,7 +179,7 @@ namespace Lab2Tests
             var loyaltyMock = new Mock<ILoyaltyService>();
             loyaltyMock.Setup(a => a.HealthCheckAsync()).Returns(healthCheckTask);
 
-            GatewayController controller = new GatewayController( reservationMock.Object, paymentMock.Object, loyaltyMock.Object);
+            GatewayController controller = new GatewayController(loggerMock.Object, reservationMock.Object, paymentMock.Object, loyaltyMock.Object);
 
             string username = "UserName";
 
@@ -195,6 +195,7 @@ namespace Lab2Tests
             paymentMock.Verify(mock => mock.GetPaymentByUidAsync(guid), Times.Once());
 
             Assert.IsTrue(responseTask.IsCompletedSuccessfully);
+            Assert.IsTrue(info.Hotel.Stars.Equals(1));
         }
 
         [TestMethod]
@@ -231,7 +232,7 @@ namespace Lab2Tests
             Task<Reservation?> returnCreatedReservationTask = Task.Run(() => Builder.BuildReservationResponse());
             reservationMock.Setup(a => a.CreateReservationAsync(username, It.IsAny<Reservation>())).Returns(returnCreatedReservationTask);
 
-            GatewayController controller = new GatewayController( reservationMock.Object, paymentMock.Object, loyaltyMock.Object);
+            GatewayController controller = new GatewayController(loggerMock.Object, reservationMock.Object, paymentMock.Object, loyaltyMock.Object);
 
             var responseTask = controller.CreateReservation(username, Builder.BuildReservationRequestMessage());
             var response = await responseTask;
@@ -279,7 +280,7 @@ namespace Lab2Tests
             Task<Loyalty?> returnLoyaltyByUsernameTask = Task.Run(() => Builder.BuildLoyaltyByUsername(username));
             loyaltyMock.Setup(a => a.DeleteLoyaltyByUsernameAsync(username)).Returns(returnLoyaltyByUsernameTask);
 
-            GatewayController controller = new GatewayController( reservationMock.Object, paymentMock.Object, loyaltyMock.Object);
+            GatewayController controller = new GatewayController(loggerMock.Object, reservationMock.Object, paymentMock.Object, loyaltyMock.Object);
 
             var responseTask = controller.DeleteReservationsByUid(guid, username);
             var response = await responseTask;
@@ -315,7 +316,7 @@ namespace Lab2Tests
             Task<Loyalty?> returnLoyaltyByUsernameTask = Task.Run(() => Builder.BuildLoyaltyByUsername(username));
             loyaltyMock.Setup(a => a.GetLoyaltyByUsernameAsync(username)).Returns(returnLoyaltyByUsernameTask);
 
-            GatewayController controller = new GatewayController( reservationMock.Object, paymentMock.Object, loyaltyMock.Object);
+            GatewayController controller = new GatewayController(loggerMock.Object, reservationMock.Object, paymentMock.Object, loyaltyMock.Object);
 
             var responseTask = controller.GetLoyaltyInfoByUsername(username);
             var response = await responseTask;

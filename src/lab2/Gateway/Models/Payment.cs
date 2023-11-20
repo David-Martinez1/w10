@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Gateway.Models
 {
     /// <summary>
-    /// Запись об оплате
+    /// Запись о человеке
     /// </summary>
     public class Payment
     {

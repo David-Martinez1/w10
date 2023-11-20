@@ -3,20 +3,16 @@ using System.Runtime.CompilerServices;
 
 namespace Gateway.Services
 {
-
     public class CircuitBreaker
     {
-        private static int failureCount = 0;
-        private static bool IsStateOpened = false;
-        private static int N = 3;
         private static volatile CircuitBreaker instance = null;
         private static object syncRoot = new object();
-        
-        
+        private static int failureCount = 0;
+        private static int N = 3;
+        private static bool IsStateOpened = false;
 
         public static CircuitBreaker Instance
         {
-
             get
             {
                 if (instance == null)
@@ -34,22 +30,22 @@ namespace Gateway.Services
         }
 
         private CircuitBreaker() {}
-        public bool IsOpened()
-        {
-            return IsStateOpened;
-        }
-        
 
-        public void ResetFailureCount()
-        {
-            failureCount = 0;
-            IsStateOpened = false;
-        }
         public void IncrementFailureCount()
         {
             failureCount++;
             IsStateOpened = failureCount >= N ? true : false;
         }
 
+        public void ResetFailureCount()
+        {
+            failureCount = 0;
+            IsStateOpened = false;
+        }
+
+        public bool IsOpened()
+        {
+            return IsStateOpened;
+        }
     }
 }

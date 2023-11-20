@@ -11,13 +11,13 @@ namespace Payment_Service
     {
         public PaymentDBContext()
         {
-           
+            //Database.EnsureCreated();
         }
 
         public PaymentDBContext(DbContextOptions<PaymentDBContext> options)
             : base(options)
         {
-          
+            //Database.EnsureCreated();
         }
 
         public virtual DbSet<Payment> Payments { get; set; } = null!;
@@ -26,6 +26,11 @@ namespace Payment_Service
         {
             if (!optionsBuilder.IsConfigured)
             {
+                //var databaseHost = Environment.GetEnvironmentVariable("DB_HOST");
+                //var databasePort = Environment.GetEnvironmentVariable("DB_PORT");
+                //var database = Environment.GetEnvironmentVariable("DATABASE");
+                //var username = Environment.GetEnvironmentVariable("USERNAME");
+                //var password = Environment.GetEnvironmentVariable("PASSWORD");
                 optionsBuilder.UseNpgsql(
                     $"Host=postgres;Port=5432;Database=payments;Username=postgres;Password=postgres");
             }
@@ -33,7 +38,7 @@ namespace Payment_Service
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-           // modelBuilder.HasAnnotation("Relational:Collation", "Russian_Russia.1251");
+            modelBuilder.HasAnnotation("Relational:Collation", "Russian_Russia.1251");
 
             modelBuilder.Entity<Payment>(entity =>
             {

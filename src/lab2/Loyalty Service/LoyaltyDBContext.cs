@@ -10,12 +10,13 @@ namespace Loyalty_Service
     {
         public LoyaltyDBContext()
         {
+            //Database.EnsureCreated();
         }
 
         public LoyaltyDBContext(DbContextOptions<LoyaltyDBContext> options)
             : base(options)
         {
-    
+            //Database.EnsureCreated();
         }
 
         public virtual DbSet<Loyalty> Loyalty { get; set; }
@@ -24,6 +25,11 @@ namespace Loyalty_Service
         {
             if (!optionsBuilder.IsConfigured)
             {
+                //var databaseHost = Environment.GetEnvironmentVariable("DB_HOST");
+                //var databasePort = Environment.GetEnvironmentVariable("DB_PORT");
+                //var database = Environment.GetEnvironmentVariable("DATABASE");
+                //var username = Environment.GetEnvironmentVariable("USERNAME");
+                //var password = Environment.GetEnvironmentVariable("PASSWORD");
                 optionsBuilder.UseNpgsql(
                     "Host=postgres;Port=5432;Database=loyalties;Username=postgres;Password=postgres");
             }
@@ -31,7 +37,7 @@ namespace Loyalty_Service
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //modelBuilder.HasAnnotation("Relational:Collation", "Russian_Russia.1251");
+            modelBuilder.HasAnnotation("Relational:Collation", "Russian_Russia.1251");
 
             modelBuilder.Entity<Loyalty>(entity =>
             {

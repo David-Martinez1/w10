@@ -24,6 +24,7 @@ namespace Gateway
 
 
             services.AddCors();
+            //string CON_STRING = Environment.GetEnvironmentVariable("CON_STRING");
             
             services.AddScoped<IReservationService, ReservationService>();
             services.AddScoped<IPaymentService, PaymentService>();
@@ -35,12 +36,14 @@ namespace Gateway
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
 
+                // Set the comments path for the Swagger JSON and UI.
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
             });
         }
 
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseSwagger();

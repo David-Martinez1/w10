@@ -27,26 +27,13 @@ namespace Payment_Service
             return Ok();
         }
 
-        [HttpPost("api/v1/payments")]
-        public async Task<ActionResult<Payment>> CreatePayment(
-            [FromBody] Payment request)
+        [HttpGet("api/v1/payments/{paymentUid}")]
+        public async Task<ActionResult<Payment>> GetByUid([FromRoute] Guid paymentUid)
         {
-            if (request == null)
-            {
-                return BadRequest();
-            }
+            var reservation = await _paymentContext.Payments.AsNoTracking()
+                .FirstOrDefaultAsync(r => r.PaymentUid.Equals(paymentUid));
 
-            var newReservation = new Payment()
-            {
-                Status = PaymentStatuses.PAID,
-                PaymentUid = Guid.NewGuid(),
-                Price = request.Price,
-
-            };
-            await _paymentContext.Payments.AddAsync(newReservation);
-            await _paymentContext.SaveChangesAsync();
-
-            return newReservation;
+            return reservation;
         }
 
         [HttpPut("api/v1/payments/{paymentUid}")]
@@ -58,17 +45,6 @@ namespace Payment_Service
             await _paymentContext.SaveChangesAsync();
             return res;
         }
-
-        [HttpGet("api/v1/payments/{paymentUid}")]
-        public async Task<ActionResult<Payment>> GetByUid([FromRoute] Guid paymentUid)
-        {
-            var reservation = await _paymentContext.Payments.AsNoTracking()
-                .FirstOrDefaultAsync(r => r.PaymentUid.Equals(paymentUid));
-
-            return reservation;
-        }
-
-
 
         [HttpDelete("api/v1/payments/{paymentUid}")]
         public async Task<ActionResult<Payment?>> DeleteByUid([FromRoute] Guid paymentUid)
@@ -84,6 +60,26 @@ namespace Payment_Service
         }
 
 
-        
+        [HttpPost("api/v1/payments")]
+        public async Task<ActionResult<Payment>> CreatePayment(
+            [FromBody] Payment request)
+        {
+            if (request == null)
+            {
+                return BadRequest();
+            }
+
+            var newReservation = new Payment()
+            {
+                Status = PaymentStatuses.PAID,
+                PaymentUid = Guid.NewGuid(),
+                Price = request.Price,
+                
+            };
+            await _paymentContext.Payments.AddAsync(newReservation);
+            await _paymentContext.SaveChangesAsync();
+
+            return newReservation;
+        }
     }
 }
