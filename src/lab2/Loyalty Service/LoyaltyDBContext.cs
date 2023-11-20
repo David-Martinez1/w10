@@ -31,7 +31,7 @@ namespace Loyalty_Service
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.HasAnnotation("Relational:Collation", "Russian_Russia.1251");
+            //modelBuilder.HasAnnotation("Relational:Collation", "Russian_Russia.1251");
 
             modelBuilder.Entity<Loyalty>(entity =>
             {
