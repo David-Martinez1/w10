@@ -1,5 +1,5 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
+using System;
 using Microsoft.EntityFrameworkCore;
 #nullable disable
 
@@ -35,7 +35,7 @@ namespace Reservation_Service
 
 
 
-                modelBuilder.HasAnnotation("Relational:Collation", "Russian_Russia.1251");
+                //modelBuilder.HasAnnotation("Relational:Collation", "Russian_Russia.1251");
 
 
 

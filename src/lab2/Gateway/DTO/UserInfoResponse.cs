@@ -5,6 +5,18 @@ using System.Collections.Generic;
 
 namespace Gateway.DTO
 {
+    public class LoyaltyInfo
+    {
+        public string Status { get; set; } = null!;
+        public int? Discount { get; set; }
+    }
+
+    public class PaymentInfo
+    {
+        public string Status { get; set; } = null!;
+        public int? Price { get; set; }
+    }
+
     public class UserInfoResponse
     {
         public List<UserReservationInfo> Reservations { get; set; } = null!;
@@ -22,17 +34,7 @@ namespace Gateway.DTO
         public object Payment { get; set; }
     }
 
-    public class LoyaltyInfo
-    {
-        public string Status { get; set; } = null!;
-        public int? Discount { get; set; }
-    }
 
-    public class PaymentInfo
-    {
-        public string Status { get; set; } = null!;
-        public int? Price { get; set; }
-    }
 
     public class HotelInfo
     {
@@ -40,6 +42,17 @@ namespace Gateway.DTO
         public string Name { get; set; } = null!;
         public string FullAddress { get; set; } = null!;
         public int? Stars { get; set; }
+    }
+
+    public class CreateReservationResponse
+    {
+        public Guid ReservationUid { get; set; }
+        public Guid HotelUid { get; set; }
+        public string Status { get; set; } = null!;
+        public int Discount { get; set; }
+        public DateOnly StartDate { get; set; }
+        public DateOnly EndDate { get; set; }
+        public PaymentInfo Payment { get; set; }
     }
 
     public class LoyaltyInfoResponse
@@ -56,15 +69,6 @@ namespace Gateway.DTO
         public DateTime EndDate { get; set; }
     }
 
-    public class CreateReservationResponse
-    {
-        public Guid ReservationUid { get; set; }
-        public Guid HotelUid { get; set; }
-        public string Status { get; set; } = null!;
-        public int Discount { get; set; }
-        public DateOnly StartDate { get; set; }
-        public DateOnly EndDate { get; set; }
-        public PaymentInfo Payment { get; set; }
-    }
+
 }
 
