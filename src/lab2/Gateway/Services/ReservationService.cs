@@ -3,10 +3,10 @@ using System.Net.Http.Json;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System;
-using System.Net;
 using Gateway.DTO;
 using Gateway.Utils;
 using Gateway.Models;
+using System.Net;
 using Gateway.ServiceInterfaces;
 
 namespace Gateway.Services
@@ -29,14 +29,6 @@ namespace Gateway.Services
             return res.StatusCode == HttpStatusCode.OK;
         }
 
-        public async Task<Hotels?> GetHotelsByIdAsync(int? id)
-        {
-            using var req = new HttpRequestMessage(HttpMethod.Get, $"api/v1/hotels/{id}");
-            using var res = await _httpClient.SendAsync(req);
-            var response = await res.Content.ReadFromJsonAsync<Hotels>();
-            return response;
-        }
-
         public async Task<PaginationResponse<IEnumerable<Hotels>>?> GetHotelsAsync(int? page,
         int? size)
         {
@@ -46,7 +38,13 @@ namespace Gateway.Services
             return response;
         }
 
-
+        public async Task<Hotels?> GetHotelsByIdAsync(int? id)
+        {
+            using var req = new HttpRequestMessage(HttpMethod.Get, $"api/v1/hotels/{id}");
+            using var res = await _httpClient.SendAsync(req);
+            var response = await res.Content.ReadFromJsonAsync<Hotels>();
+            return response;
+        }
 
         public async Task<Hotels?> GetHotelsByUidAsync(Guid? id)
         {
@@ -64,14 +62,6 @@ namespace Gateway.Services
             req.Headers.Add("X-User-Name", username);
             using var res = await _httpClient.SendAsync(req);
             var response = await res.Content.ReadFromJsonAsync<IEnumerable<Reservation>>();
-            return response;
-        }
-
-        public async Task<Reservation?> DeleteReservationAsync(Guid reservationUid)
-        {
-            using var req = new HttpRequestMessage(HttpMethod.Delete, $"api/v1/reservations/{reservationUid}");
-            using var res = await _httpClient.SendAsync(req);
-            var response = await res.Content.ReadFromJsonAsync<Reservation>();
             return response;
         }
 
@@ -94,6 +84,15 @@ namespace Gateway.Services
             return response;
         }
 
+        
 
+        public async Task<Reservation?> DeleteReservationAsync(Guid reservationUid)
+        {
+            using var req = new HttpRequestMessage(HttpMethod.Delete, $"api/v1/reservations/{reservationUid}");
+            //req.Content = JsonContent.Create(reservation, typeof(Reservation));
+            using var res = await _httpClient.SendAsync(req);
+            var response = await res.Content.ReadFromJsonAsync<Reservation>();
+            return response;
+        }
     }
 }

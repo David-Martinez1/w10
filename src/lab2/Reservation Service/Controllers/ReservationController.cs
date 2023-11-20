@@ -12,9 +12,8 @@ namespace Reservation_Service
     [ApiController]
     public class ReservationController : ControllerBase
     {
-        private readonly ReservationDBContext _reservationsContext;
         private readonly ILogger<ReservationController> _logger;
-        
+        private readonly ReservationDBContext _reservationsContext;
 
         public ReservationController(ILogger<ReservationController> logger, ReservationDBContext reservationsContext)
         {
@@ -26,15 +25,6 @@ namespace Reservation_Service
         public async Task<ActionResult> HealthCheck()
         {
             return Ok();
-        }
-
-        [HttpGet("api/v1/reservations/{reservationUid:guid}")]
-        public async Task<ActionResult<Reservation?>> GetByUid([FromRoute] Guid reservationUid)
-        {
-            var reservation = await _reservationsContext.Reservations.AsNoTracking()
-                .FirstOrDefaultAsync(r => r.ReservationUid.Equals(reservationUid));
-
-            return reservation;
         }
 
         [HttpGet("api/v1/reservations")]
@@ -53,7 +43,14 @@ namespace Reservation_Service
             return response;
         }
 
-       
+        [HttpGet("api/v1/reservations/{reservationUid:guid}")]
+        public async Task<ActionResult<Reservation?>> GetByUid([FromRoute] Guid reservationUid)
+        {
+            var reservation = await _reservationsContext.Reservations.AsNoTracking()
+                .FirstOrDefaultAsync(r => r.ReservationUid.Equals(reservationUid));
+
+            return reservation;
+        }
 
         [HttpDelete("api/v1/reservations/{reservationUid}")]
         public async Task<ActionResult<Reservation?>> DeleteByUid([FromRoute] Guid reservationUid)
@@ -61,6 +58,13 @@ namespace Reservation_Service
             var res = await _reservationsContext.Reservations
                 .FirstOrDefaultAsync(r => r.ReservationUid.Equals(reservationUid));
             res.Status = ReservationStatuses.CANCELED;
+            //res.Username = reservation.Username;
+            //res.PaymentUid = reservation.PaymentUid;
+            //res.ReservationUid = reservation.ReservationUid;
+            //res.StartDate = reservation.StartDate;
+            //res.EndDate = reservation.EndDate;
+            //res.HotelId = reservation.HotelId;
+            //res.Id = reservation.Id;
             await _reservationsContext.SaveChangesAsync();
             return res;
         }
@@ -82,6 +86,7 @@ namespace Reservation_Service
                 PaymentUid = request.PaymentUid,
                 HotelId = request.HotelId,
                 ReservationUid = Guid.NewGuid(),
+                //StartDate = DateOnly.FromDateTime(DateTime.Now),
                 StartDate = request.StartDate,
                 EndDate = request.EndDate,
                 Id = request.Id,
