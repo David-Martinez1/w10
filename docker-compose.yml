@@ -6,14 +6,15 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "1234"
+      POSTGRES_PASSWORD: "postgres"
       POSTGRES_DB: postgres
     volumes:
+      - db-data:/var/lib/postgresql/data
       - ./postgres/:/docker-entrypoint-initdb.d/
     ports:
       - "5432:5432"
     networks:
-      - net-local
+      - db-local
       
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -q -d postgres -U postgres"]
@@ -21,15 +22,13 @@ services:
       timeout: 10s
       retries: 5
       start_period: 10s
-      
-     
   
   loyalty:
     build:
       context: ./src/lab2/Loyalty Service/
       dockerfile: Dockerfile
     restart: always
-    container_name: loyalty_lab3
+    container_name: loyalty
     depends_on:
       postgres:
         condition: service_healthy
@@ -40,7 +39,8 @@ services:
     environment:
       DATABASE_HOST: postgres
     networks:
-      - net-local
+      - db-local
+      - loyalty-local
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8050/manage/health"]
       interval: 5s
@@ -51,7 +51,7 @@ services:
       context: ./src/lab2/Payment Service/
       dockerfile: Dockerfile
     restart: always
-    container_name: payment_lab3
+    container_name: payment
     depends_on:
       postgres:
         condition: service_healthy
@@ -62,7 +62,8 @@ services:
     environment:
       DATABASE_HOST: postgres
     networks:
-      - net-local
+      - db-local
+      - payment-local
     
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8060/manage/health"]
@@ -73,7 +74,7 @@ services:
       context: ./src/lab2/Reservation Service/
       dockerfile: Dockerfile
     restart: always
-    container_name: reservation_lab3
+    container_name: reservation
     depends_on:
       postgres:
         condition: service_healthy
@@ -84,7 +85,8 @@ services:
     environment:
       DATABASE_HOST: postgres
     networks:
-      - net-local
+      - db-local
+      - reservation-local
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8070/manage/health"]
       interval: 5s
@@ -103,8 +105,9 @@ services:
       - payment
       - loyalty
     networks:
-      - net-local
-
+      - loyalty-local
+      - payment-local
+      - reservation-local
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/manage/health"]
       interval: 5s
@@ -112,5 +115,11 @@ services:
     
   
 networks:
-  net-local:
+  loyalty-local:
+  payment-local:
+  reservation-local:
+  db-local:
     driver: bridge
+
+volumes:
+  db-data:
