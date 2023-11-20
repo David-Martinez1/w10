@@ -14,9 +14,10 @@ namespace Gateway.Services
 {
     public class LoyaltyService : ILoyaltyService
     {
-        private readonly RequestQueueService _requestQueueService;
         private readonly HttpClient _httpClient;
         private readonly CircuitBreaker _circuitBreaker;
+        private readonly RequestQueueService _requestQueueService;
+
         
         public LoyaltyService(RequestQueueService requestQueueService)
         {
@@ -25,6 +26,19 @@ namespace Gateway.Services
             _requestQueueService.StartWorker();
             _httpClient = new HttpClient();
             _httpClient.BaseAddress = new Uri("http://loyalty:8050/");
+        }
+
+        public async Task<Loyalty?> PutLoyaltyByUsernameAsync(string username)
+        {
+            if (_circuitBreaker.IsOpened())
+            {
+                return null;
+            }
+            using var req = new HttpRequestMessage(HttpMethod.Put, "api/v1/loyalty");
+            req.Headers.Add("X-User-Name", username);
+            using var res = await _httpClient.SendAsync(req);
+            var response = await res.Content.ReadFromJsonAsync<Loyalty>();
+            return response;
         }
 
         public async Task<bool> HealthCheckAsync()
@@ -66,18 +80,7 @@ namespace Gateway.Services
             return response;
         }
 
-        public async Task<Loyalty?> PutLoyaltyByUsernameAsync(string username)
-        {
-            if (_circuitBreaker.IsOpened())
-            {
-                return null;
-            }
-            using var req = new HttpRequestMessage(HttpMethod.Put, "api/v1/loyalty");
-            req.Headers.Add("X-User-Name", username);
-            using var res = await _httpClient.SendAsync(req);
-            var response = await res.Content.ReadFromJsonAsync<Loyalty>();
-            return response;
-        }
+
 
         public async Task<Loyalty?> DeleteLoyaltyByUsernameAsync(string username)
         {

@@ -19,15 +19,15 @@ namespace Gateway.Services
             _circuitBreaker = CircuitBreaker.Instance;
         }
 
+        public void AddRequestToQueue(HttpRequestMessage httpRequestMessage)
+        {
+            _requestMessagesQueue.Enqueue(httpRequestMessage);
+        }
+
         public void StartWorker()
         {
             new Thread(Start).Start();
             Console.WriteLine("Thread started");
-        }
-
-        public void AddRequestToQueue(HttpRequestMessage httpRequestMessage)
-        {
-            _requestMessagesQueue.Enqueue(httpRequestMessage);
         }
 
         private async void Start(object? state)

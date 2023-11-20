@@ -11,42 +11,10 @@ namespace Gateway.DTO
         public object Loyalty { get; set; } = null!;
     }
 
-
-    public class UserReservationInfo
-    {
-        public Guid ReservationUid { get; set; }
-        public HotelInfo Hotel { get; set; }
-        public string Status { get; set; } = null!;
-        public DateOnly StartDate { get; set; }
-        public DateOnly EndDate { get; set; }
-        public object Payment { get; set; }
-    }
-
     public class LoyaltyInfo
     {
         public string Status { get; set; } = null!;
         public int? Discount { get; set; }
-    }
-
-    public class PaymentInfo
-    {
-        public string Status { get; set; } = null!;
-        public int? Price { get; set; }
-    }
-
-    public class HotelInfo
-    {
-        public Guid HotelUid { get; set; }
-        public string Name { get; set; } = null!;
-        public string FullAddress { get; set; } = null!;
-        public int? Stars { get; set; }
-    }
-
-    public class LoyaltyInfoResponse
-    {
-        public string Status { get; set; } = null!;
-        public int Discount { get; set; }
-        public int ReservationCount { get; set; }
     }
 
     public class CreateReservationRequest
@@ -66,5 +34,40 @@ namespace Gateway.DTO
         public DateOnly EndDate { get; set; }
         public PaymentInfo Payment { get; set; }
     }
+
+    public class PaymentInfo
+    {
+        public string Status { get; set; } = null!;
+        public int? Price { get; set; }
+    }
+
+    public class UserReservationInfo
+    {
+        public Guid ReservationUid { get; set; }
+        public HotelInfo Hotel { get; set; }
+        public string Status { get; set; } = null!;
+        public DateOnly StartDate { get; set; }
+        public DateOnly EndDate { get; set; }
+        public object Payment { get; set; }
+    }
+
+
+
+    public class HotelInfo
+    {
+        public Guid HotelUid { get; set; }
+        public string Name { get; set; } = null!;
+        public string FullAddress { get; set; } = null!;
+        public int? Stars { get; set; }
+    }
+
+    public class LoyaltyInfoResponse
+    {
+        public string Status { get; set; } = null!;
+        public int Discount { get; set; }
+        public int ReservationCount { get; set; }
+    }
+
+
 }
 

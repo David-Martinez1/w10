@@ -14,22 +14,25 @@ namespace Gateway.ServiceInterfaces
     {
         public Task<bool> HealthCheckAsync();
 
-        public Task<PaginationResponse<IEnumerable<Hotels>>?> GetHotelsAsync(int? page,
-        int? size);
-
-        public Task<Hotels?> GetHotelsByIdAsync(int? id);
-
-        public Task<Hotels?> GetHotelsByUidAsync(Guid? id);
-
-
-        public Task<IEnumerable<Reservation>?> GetReservationsByUsernameAsync(string username);
 
         public Task<Reservation?> GetReservationsByUidAsync(Guid reservationUid);
 
         public Task<Reservation?> CreateReservationAsync(string username, Reservation request);
 
+        public Task<PaginationResponse<IEnumerable<Hotels>>?> GetHotelsAsync(int? page,
+        int? size);
+
+        public Task<Hotels?> GetHotelsByIdAsync(int? id);
+
 
 
         public Task<Reservation?> DeleteReservationAsync(Guid reservationUid);
+        public Task<Hotels?> GetHotelsByUidAsync(Guid? id);
+
+
+        public Task<IEnumerable<Reservation>?> GetReservationsByUsernameAsync(string username);
+
+
+
     }
 }

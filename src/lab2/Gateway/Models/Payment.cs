@@ -5,9 +5,6 @@ using System.Threading.Tasks;
 
 namespace Gateway.Models
 {
-    /// <summary>
-    /// Запись о человеке
-    /// </summary>
     public class Payment
     {
         public int Id { get; set; }

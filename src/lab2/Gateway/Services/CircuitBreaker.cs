@@ -5,10 +5,11 @@ namespace Gateway.Services
 {
     public class CircuitBreaker
     {
-        private static volatile CircuitBreaker instance = null;
         private static object syncRoot = new object();
         private static int failureCount = 0;
         private static int N = 3;
+        private static volatile CircuitBreaker instance = null;
+
         private static bool IsStateOpened = false;
 
         public static CircuitBreaker Instance
@@ -31,6 +32,11 @@ namespace Gateway.Services
 
         private CircuitBreaker() {}
 
+        public bool IsOpened()
+        {
+            return IsStateOpened;
+        }
+
         public void IncrementFailureCount()
         {
             failureCount++;
@@ -43,9 +49,5 @@ namespace Gateway.Services
             IsStateOpened = false;
         }
 
-        public bool IsOpened()
-        {
-            return IsStateOpened;
-        }
     }
 }

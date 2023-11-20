@@ -26,13 +26,6 @@ namespace Gateway.Services
             return res.StatusCode == HttpStatusCode.OK;
         }
 
-        public async Task<Payment?> GetPaymentByUidAsync(Guid paymentUid)
-        {
-            using var req = new HttpRequestMessage(HttpMethod.Get, $"api/v1/payments/{paymentUid}");
-            using var res = await _httpClient.SendAsync(req);
-            var response = await res.Content.ReadFromJsonAsync<Payment>();
-            return response;
-        }
 
         public async Task<Payment?> CancelPaymentByUidAsync(Guid paymentUid)
         {
@@ -49,6 +42,15 @@ namespace Gateway.Services
             var response = await res.Content.ReadFromJsonAsync<Payment>();
             return response;
         }
+
+        public async Task<Payment?> GetPaymentByUidAsync(Guid paymentUid)
+        {
+            using var req = new HttpRequestMessage(HttpMethod.Get, $"api/v1/payments/{paymentUid}");
+            using var res = await _httpClient.SendAsync(req);
+            var response = await res.Content.ReadFromJsonAsync<Payment>();
+            return response;
+        }
+
 
         public async Task<Payment?> CreatePaymentAsync(Payment request)
         {
