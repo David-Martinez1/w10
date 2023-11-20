@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Reservation_Service
 {
     /// <summary>
-    /// Запись о человеке
+    /// Запись об отеле
     /// </summary>
     public class Hotels
     {

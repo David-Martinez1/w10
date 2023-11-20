@@ -11,12 +11,14 @@ namespace Gateway.ServiceInterfaces
     {
         public Task<bool> HealthCheckAsync();
 
+        public Task<Payment?> RollBackPayment(Guid paymentUid);
+
+        public Task<Payment?> CreatePaymentAsync(Payment request);
+
         public Task<Payment?> GetPaymentByUidAsync(Guid paymentUid);
 
         public Task<Payment?> CancelPaymentByUidAsync(Guid paymentUid);
 
-        public Task<Payment?> RollBackPayment(Guid paymentUid);
 
-        public Task<Payment?> CreatePaymentAsync(Payment request);
     }
 }

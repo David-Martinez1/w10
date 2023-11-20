@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Reservation_Service.DTO;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+
 
 namespace Reservation_Service
 {
@@ -15,13 +16,15 @@ namespace Reservation_Service
     [ApiController]
     public class HotelController : ControllerBase
     {
-        private readonly ILogger<ReservationController> _logger;
         private readonly ReservationDBContext _hotelsContext;
+        private readonly ILogger<ReservationController> _logger;
+        
 
         public HotelController(ILogger<ReservationController> logger, ReservationDBContext hotelsContext)
         {
-            _logger = logger;
             _hotelsContext = hotelsContext;
+            _logger = logger;
+            
         }
 
         [HttpGet("api/v1/hotels")]
@@ -52,6 +55,13 @@ namespace Reservation_Service
             return response;
         }
 
+        [HttpGet("api/v1/hotels/byUid")]
+        public async Task<ActionResult<Hotels>> GetHotelByUid([FromBody] Guid hotelId)
+        {
+            var lib = await _hotelsContext.Hotels.FirstOrDefaultAsync(l => l.HotelUid.Equals(hotelId));
+            return lib;
+        }
+
         [HttpGet("api/v1/hotels/{hotelId}")]
         public async Task<ActionResult<Hotels>> GetHotelById([FromRoute] int hotelId)
         {
@@ -59,11 +69,6 @@ namespace Reservation_Service
             return lib;
         }
 
-        [HttpGet("api/v1/hotels/byUid")]
-        public async Task<ActionResult<Hotels>> GetHotelByUid([FromBody] Guid hotelId)
-        {
-            var lib = await _hotelsContext.Hotels.FirstOrDefaultAsync(l => l.HotelUid.Equals(hotelId));
-            return lib;
-        }
+
     }
 }

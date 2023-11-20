@@ -8,20 +8,17 @@ namespace Gateway.Services
 {
     public class RequestQueueService
     {
-        private readonly ConcurrentQueue<HttpRequestMessage> _requestMessagesQueue = new();
         private readonly HttpClient _httpClient = new();
-        private const int TimeoutInSeconds = 10;
         private static object locker = new();
         private readonly CircuitBreaker _circuitBreaker;
+        private readonly ConcurrentQueue<HttpRequestMessage> _requestMessagesQueue = new();
+
+        private const int TimeoutInSeconds = 10;
+
 
         public RequestQueueService()
         {
             _circuitBreaker = CircuitBreaker.Instance;
-        }
-
-        public void StartWorker()
-        {
-            new Thread(Start).Start();
         }
 
         public void AddRequestToQueue(HttpRequestMessage httpRequestMessage)
@@ -31,6 +28,13 @@ namespace Gateway.Services
                 _requestMessagesQueue.Enqueue(httpRequestMessage);
             }
         }
+
+        public void StartWorker()
+        {
+            new Thread(Start).Start();
+        }
+
+     
 
         private async void Start(object? state)
         {

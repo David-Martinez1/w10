@@ -2,14 +2,13 @@ version: "3"
 services:
   postgres:
     image: library/postgres:13
-    container_name: postgres_lab1
+    container_name: postgres
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "1234"
       POSTGRES_DB: postgres
     volumes:
-      - db-data:/var/lib/postgresql/data
       - ./postgres/:/docker-entrypoint-initdb.d/
     ports:
       - "5432:5432"
@@ -115,6 +114,3 @@ services:
 networks:
   net-local:
     driver: bridge
-
-volumes:
-  db-data:

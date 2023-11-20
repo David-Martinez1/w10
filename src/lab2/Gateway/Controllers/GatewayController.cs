@@ -16,16 +16,17 @@ namespace Gateway.Controllers
     [Route("/")]
     public class GatewayController : ControllerBase
     {
+        private readonly ILoyaltyService _loyaltyService;
         private readonly IReservationService _reservationsService;
         private readonly IPaymentService _paymentsService;
-        private readonly ILoyaltyService _loyaltyService;
+
 
         public GatewayController( IReservationService reservationsService,
             IPaymentService paymentsService, ILoyaltyService loyaltyService)
         {
-            _reservationsService = reservationsService;
             _paymentsService = paymentsService;
             _loyaltyService = loyaltyService;
+            _reservationsService = reservationsService;
         }
 
         [IgnoreAntiforgeryToken]
@@ -35,25 +36,7 @@ namespace Gateway.Controllers
             return Ok();
         }
 
-        [HttpGet("api/v1/hotels")]
-        public async Task<ActionResult<PaginationResponse<IEnumerable<Hotels>>?>> GetAllHotels(
-        [FromQuery] int? page,
-        [FromQuery] int? size)
-        {
-            var checkReservationService = _reservationsService.HealthCheckAsync();
-
-            if (!(await checkReservationService))
-            {
-                var resp = new ErrorResponse()
-                {
-                    Message = "Reservation Service unavailable",
-                };
-                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-                return new ObjectResult(resp);
-            }
-            var response = await _reservationsService.GetHotelsAsync(page, size);
-            return response;
-        }
+        
 
         [HttpGet("api/v1/me")]
         public async Task<ActionResult<UserInfoResponse?>> GetUserInfoByUsername(
@@ -186,6 +169,53 @@ namespace Gateway.Controllers
 
             
             await Task.WhenAll(tasks);
+
+            return response;
+        }
+
+        [HttpGet("api/v1/hotels")]
+        public async Task<ActionResult<PaginationResponse<IEnumerable<Hotels>>?>> GetAllHotels(
+        [FromQuery] int? page,
+        [FromQuery] int? size)
+        {
+            var checkReservationService = _reservationsService.HealthCheckAsync();
+
+            if (!(await checkReservationService))
+            {
+                var resp = new ErrorResponse()
+                {
+                    Message = "Reservation Service unavailable",
+                };
+                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                return new ObjectResult(resp);
+            }
+            var response = await _reservationsService.GetHotelsAsync(page, size);
+            return response;
+        }
+
+        [HttpGet("api/v1/loyalty")]
+        public async Task<ActionResult<LoyaltyInfoResponse?>> GetLoyaltyInfoByUsername(
+        [FromHeader(Name = "X-User-Name")] string xUserName)
+        {
+            var checkLoyaltyService = _loyaltyService.HealthCheckAsync();
+
+            if (!(await checkLoyaltyService))
+            {
+                var resp = new ErrorResponse()
+                {
+                    Message = "Loyalty Service unavailable",
+                };
+                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                return new ObjectResult(resp);
+            }
+            var loyalty = await _loyaltyService.GetLoyaltyByUsernameAsync(xUserName);
+
+            var response = new LoyaltyInfoResponse()
+            {
+                Status = loyalty.Status,
+                Discount = loyalty.Discount,
+                ReservationCount = loyalty.ReservationCount,
+            };
 
             return response;
         }
@@ -417,32 +447,7 @@ namespace Gateway.Controllers
             return Ok(null);
         }
 
-        [HttpGet("api/v1/loyalty")]
-        public async Task<ActionResult<LoyaltyInfoResponse?>> GetLoyaltyInfoByUsername(
-        [FromHeader(Name = "X-User-Name")] string xUserName)
-        {
-            var checkLoyaltyService = _loyaltyService.HealthCheckAsync();
-
-            if (!(await checkLoyaltyService))
-            {
-                var resp = new ErrorResponse()
-                {
-                    Message = "Loyalty Service unavailable",
-                };
-                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-                return new ObjectResult(resp);
-            }
-            var loyalty = await _loyaltyService.GetLoyaltyByUsernameAsync(xUserName);
-
-            var response = new LoyaltyInfoResponse()
-            {
-                Status = loyalty.Status,
-                Discount = loyalty.Discount,
-                ReservationCount = loyalty.ReservationCount,
-            };
-
-            return response;
-        }
+        
 
 
     }
