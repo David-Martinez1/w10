@@ -21,13 +21,13 @@ jobs:
       # TODO build and run unit tests
 
       - name: Test
-        run:  dotnet test src/lab2/UnitTestsTests/Lab2Tests.csproj
+        run:  dotnet test lab2/UnitTestsTests/Lab2Tests.csproj
       
       - name: Upload dotnet test results
         uses: actions/upload-artifact@v3
         with:
           name: dotnet-results
-          path: src/lab2/Lab2Tests/TestResults
+          path: lab2/Lab2Tests/TestResults
         # Use always() to always run this step to publish test results when there are test failures
         if: ${{ always() }}
       
